@@ -4,6 +4,8 @@
 
 Fits an IRT mixture model that models item position effects. Requires `torch`, `numpy`, and `pandas`
 
+Model specification can be viewed [here](http://mathb.in/49304)
+
 # Data
 
 Data files should be organized with one row per response and have four columns:
