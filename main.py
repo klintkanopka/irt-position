@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 from model import IRTP
@@ -41,36 +42,34 @@ def write_output(model, path):
     person_df.to_csv(path[:-4] + '_person_params.csv')
     item_df.to_csv(path[:-4] + '_item_params.csv')
 
-def main(path):
+def main(input_path, irt_model, max_epochs, max_iter, 
+            batch_size, num_workers, learning_rate_E, 
+            learning_rate_M, epsilon, verbose):
 
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     torch.backends.cudnn.benchmark = True
 
-    params = {'batch_size': 512, 
+    params = {'batch_size': batch_size, 
               'shuffle': True,
-              'num_workers': 16,
+              'num_workers': num_workers,
               'pin_memory': True}
 
-    max_epochs = 100
-
-    data = util.IRTPDataset(path)
+    data = util.IRTPDataset(input_path)
     loader = torch.utils.data.DataLoader(data, **params)
 
-    model = IRTP(data.n_persons, data.n_items, 2)
+    model = IRTP(data.n_persons, data.n_items, irt_model)
     model.to(device)
 
     loss_fn = nn.BCELoss()
     
-    e_lr = 0.1
-    m_lr = 0.01
     e_params = []
     m_params = []
 
     for idx, p in enumerate(model.parameters()):
         if idx < 3:
-            e_params += [{'params':p, 'lr':e_lr}]
+            e_params += [{'params':p, 'lr':learning_rate_E}]
         else:
-            m_params += [{'params':p, 'lr':m_lr}]
+            m_params += [{'params':p, 'lr':learning_rate_M}]
 
     e_opt = torch.optim.SGD(e_params)
     m_opt = torch.optim.SGD(m_params)
@@ -78,15 +77,30 @@ def main(path):
     for epoch in range(max_epochs):
         print('Epoch: {0}'.format(epoch))
 
-        i, loss = em_step(e_opt, loader, model, loss_fn, device)
+        i, loss = em_step(e_opt, loader, model, loss_fn, device, max_iter, epsilon, verbose)
         print('  E-Step | Iter: {0} | Loss: {1}'.format(i, loss))
 
-        i, loss = em_step(m_opt, loader, model, loss_fn, device)
+        i, loss = em_step(m_opt, loader, model, loss_fn, device, max_iter, epsilon, verbose)
         print('  M-Step | Iter: {0} | Loss: {1}'.format(i, loss))
 
 
-    write_output(model, path)
+    write_output(model, input_path)
 
 if __name__ == '__main__':
-    main('data/tiny_test.csv')
+    desc = 'Software for fitting an IRT mixture model for position effects'
+    parser = argparse.ArgumentParser(description=desc)
+    parser.add_argument('-i', '--input', help='input file path', default='data/tiny_test.csv')
+    parser.add_argument('-m', '--irt_model', help='number of parameters for IRT model - pick 1 or 2', default=2)
+    parser.add_argument('-e', '--epochs', help='max epochs', default=100)
+    parser.add_argument('-n', '--max_iterations', help='max iterations within each E/M step', default=100)
+    parser.add_argument('-b', '--batch_size', help='batch size', default=128)
+    parser.add_argument('-w', '--num_workers', help='number of parallel workers for data loader', default=2)
+    parser.add_argument('-E', '--learning_rate_E', help='E step learning rate', default=0.1)
+    parser.add_argument('-M', '--learning_rate_M', help='M step learning rate', default=0.01)
+    parser.add_argument('-c', '--epsilon', help='epsilon for convergence', default=0.01)
+    parser.add_argument('-v', '--verbose', help='print additional fitting information', action='store_true', default=False)
+    args = parser.parse_args()
+    main(args.input, args.irt_model, args.epochs, args.max_iterations, 
+            args.batch_size, args.num_workers, args.learning_rate_E, 
+            args.learning_rate_M, args.epsilon, args.verbose)
 
