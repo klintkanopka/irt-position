@@ -38,8 +38,8 @@ def write_output(model, path):
     print(person_dict, item_dict)
     person_df = pd.DataFrame(person_dict)
     item_df = pd.DataFrame(item_dict)
-    person_df.to_csv(path[:-4] + '_person.csv')
-    item_df.to_csv(path[:-4] + '_item.csv')
+    person_df.to_csv(path[:-4] + '_person_params.csv')
+    item_df.to_csv(path[:-4] + '_item_params.csv')
 
 def main(path):
 
