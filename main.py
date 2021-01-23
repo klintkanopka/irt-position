@@ -34,16 +34,24 @@ def em_step(optimizer, loader, model, loss_fn, device, max_iter=100, eps=1e-2, v
     return i, loss, loss_log
 
 def write_output(model, loss_log, path):
+
     person_dict = {}
     item_dict = {}
+    loss_dict = {'loss': loss_log}
+
     for idx, p in enumerate(model.named_parameters()):
         if idx < 3:
             person_dict[p[0]] = p[1].data.cpu().numpy()
         else:
             item_dict[p[0]] = p[1].data.cpu().numpy()
+
     person_df = pd.DataFrame(person_dict)
+    person_df.index.name = 'sid'
     item_df = pd.DataFrame(item_dict)
-    loss_df = pd.DataFrame({'loss':loss_log})
+    person_df.index.name = 'ik'
+    loss_df = pd.DataFrame(loss_dict)
+    loss_df.index.name = 'epoch'
+
     person_df.to_csv(path[:-4] + '_person_params.csv')
     item_df.to_csv(path[:-4] + '_item_params.csv')
     loss_df.to_csv(path[:-4] + '_loss.csv')

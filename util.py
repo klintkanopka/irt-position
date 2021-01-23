@@ -15,7 +15,7 @@ class IRTPDataset(torch.utils.data.Dataset):
             'sid' : list(range(len(people)))
             })
         person_path = data_path[:-4] + '_person_key.csv'
-        person_df.to_csv(person_path)
+        person_df.to_csv(person_path, index=False)
 
         # zero-index items and generate key to match data later
         items = d['itemkey'].unique()
@@ -24,7 +24,7 @@ class IRTPDataset(torch.utils.data.Dataset):
             'ik' : list(range(len(items)))
             })
         item_path = data_path[:-4] + '_item_key.csv'
-        item_df.to_csv(item_path)
+        item_df.to_csv(item_path, index=False)
 
         # construct dataframe
 
