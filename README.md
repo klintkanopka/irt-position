@@ -2,7 +2,7 @@
 
 # Overview
 
-Fits an IRT mixture model that models item position effects.
+Fits an IRT mixture model that models item position effects. Requires `torch`, `numpy`, and `pandas`
 
 # Data
 
