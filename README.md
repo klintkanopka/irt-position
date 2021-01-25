@@ -4,6 +4,8 @@
 
 Fits an IRT mixture model that models item position effects. Requires `torch`, `numpy`, and `pandas`
 
+Model specification can be viewed [here](http://mathb.in/49304)
+
 # Data
 
 Data files should be organized with one row per response and have four columns:
@@ -17,7 +19,9 @@ Included is a 500 student, 44 item data file: `data/tiny_test.csv`
 
 # Usage
 
-Run `main.py` from the command line. Will function with no additional arguments. Implemented arguments are as follows:
+Run `main.py` from the command line. If this full repo is cloned, it will function with no additional arguments. For help with arguments, run `python main.py -h`
+
+Implemented arguments are as follows:
 
 - **--input**: Input file path. Defaults to `data/tiny_test.csv'
 - **--irt_model**: Number of parameters for the underlying IRT model. Specifying `1` will implement a mixture of Rasch models and specifying `2` will implement a mixture of 2PLs. Defaults to `2`
@@ -35,15 +39,39 @@ Run `main.py` from the command line. Will function with no additional arguments.
 
 Upon loading data, two additional files are created, with base file names corresponding to the original data file used:
 
-- **filename\_person\_key.csv** relates rows of the person parameter file to the original respondent ids
-- **filename\_item\_key.csv** relates rows of the item paramter file to the original item ids
+- **filename\_person\_key.csv** relates rows of the person parameter file (called `sid` internally) to the original respondent ids
+- **filename\_item\_key.csv** relates rows of the item paramter file (called `ik` internally) to the original item ids
 
 After fitting the model, creates two additional files, with base file names corresponding to the original data file used:
 
 
-- **filename\_person\_params.csv** contains fitted person parameters
-- **filename\_item\_params.csv** contains fitted item parameters
+- **filename\_person\_params.csv** contains fitted person parameters. Columns are: `id`, `sid`, `theta`, `k`, `c`
+- **filename\_item\_params.csv** contains fitted item parameters. Columns are: `itemkey`, `ik`, `beta_e`, `beta_l`, `alpha_e`, `alpha_l`
+
+Person-side parameters are:
+
+- `id`: Respondent identifier from original dataset
+- `sid`: Internal, 0-indexed, respondent key
+- `theta`: Estimated ability
+- `k`: Mixing location parameter. Specifies the item position where the mixture is half early, half late. Not constrained to be an integer
+- `c`: Mixing scale parameter. Controls the slope of the mixing curve. Larger values represent more abrupt transitions from early to late item response functions
+
+Item-side parameters are:
+
+- `itemkey`: Item identifier from original dataset
+- `ik`: Internal, 0-indexed, item key
+- `beta_e`: Early-test item difficulty. Note that to idenitfy the model, these are forced to sum to zero during fitting. After fitting, check to see that this is approximately true (it should be) - if not, demean this column and let me know
+- `beta_l`: Late-test item difficulty
+- `alpha_e`: Early-test item discrimination. If `--irt-model 1` is specified, this column will still be returned, but populated with all ones
+- `alpha_l`: Late-test item discrimination. If `--irt-model 1` is specified, this column will still be returned, but populated with all ones
 
 # Misc
 
-Automatically uses GPU for computation if available
+- Automatically uses GPU for computation if available. If this causes problems, try reducing batch size.
+
+# To do:
+
+- Flags to force CPU/GPU usage
+- Clean up early stopping implementation
+- Improve command line diagnostic printing (using `tqdm`)
+- Add `tensorboard` integration

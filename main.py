@@ -34,18 +34,32 @@ def em_step(optimizer, loader, model, loss_fn, device, max_iter=100, eps=1e-2, v
     return i, loss, loss_log
 
 def write_output(model, loss_log, path):
+
     person_dict = {}
     item_dict = {}
+    loss_dict = {'loss': loss_log}
+
     for idx, p in enumerate(model.named_parameters()):
         if idx < 3:
             person_dict[p[0]] = p[1].data.cpu().numpy()
         else:
             item_dict[p[0]] = p[1].data.cpu().numpy()
+
     person_df = pd.DataFrame(person_dict)
+    person_df.index.name = 'sid'
     item_df = pd.DataFrame(item_dict)
-    loss_df = pd.DataFrame({'loss':loss_log})
-    person_df.to_csv(path[:-4] + '_person_params.csv')
-    item_df.to_csv(path[:-4] + '_item_params.csv')
+    item_df.index.name = 'ik'
+    loss_df = pd.DataFrame(loss_dict)
+    loss_df.index.name = 'epoch'
+
+    person_key = pd.read_csv(path[:-4] + '_person_key.csv')
+    item_key = pd.read_csv(path[:-4] + '_item_key.csv')
+
+    person_df = pd.merge(person_key, person_df, on='sid', how='inner')
+    item_df = pd.merge(item_key, item_df, on='ik', how='inner')
+
+    person_df.to_csv(path[:-4] + '_person_params.csv', index=False)
+    item_df.to_csv(path[:-4] + '_item_params.csv', index=False)
     loss_df.to_csv(path[:-4] + '_loss.csv')
 
 def main(input_path, irt_model, max_epochs, max_iter, 
@@ -107,14 +121,14 @@ if __name__ == '__main__':
     desc = 'Software for fitting an IRT mixture model for position effects'
     parser = argparse.ArgumentParser(description=desc)
     parser.add_argument('-i', '--input', help='input file path', default='data/tiny_test.csv')
-    parser.add_argument('-m', '--irt_model', help='number of parameters for IRT model - pick 1 or 2', default=2)
-    parser.add_argument('-e', '--epochs', help='max epochs', default=100)
-    parser.add_argument('-n', '--max_iterations', help='max iterations within each E/M step', default=100)
-    parser.add_argument('-b', '--batch_size', help='batch size', default=128)
-    parser.add_argument('-w', '--num_workers', help='number of parallel workers for data loader', default=2)
-    parser.add_argument('-E', '--learning_rate_E', help='E step learning rate', default=0.1)
-    parser.add_argument('-M', '--learning_rate_M', help='M step learning rate', default=0.01)
-    parser.add_argument('-c', '--epsilon', help='epsilon for convergence', default=0.001)
+    parser.add_argument('-m', '--irt_model', help='number of parameters for IRT model - pick 1 or 2', type=int, default=2)
+    parser.add_argument('-e', '--epochs', help='max epochs', type=int, default=100)
+    parser.add_argument('-n', '--max_iterations', help='max iterations within each E/M step', type=int, default=100)
+    parser.add_argument('-b', '--batch_size', help='batch size', type=int, default=128)
+    parser.add_argument('-w', '--num_workers', help='number of parallel workers for data loader', type=int, default=2)
+    parser.add_argument('-E', '--learning_rate_E', help='E step learning rate', type=float, default=0.1)
+    parser.add_argument('-M', '--learning_rate_M', help='M step learning rate', type=float, default=0.01)
+    parser.add_argument('-c', '--epsilon', help='epsilon for convergence', type=float, default=0.001)
     parser.add_argument('-v', '--verbose', help='print additional fitting information', action='store_true', default=False)
     args = parser.parse_args()
     main(args.input, args.irt_model, args.epochs, args.max_iterations, 
