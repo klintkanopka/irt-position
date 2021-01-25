@@ -23,7 +23,5 @@ for (j in 1:ncol(resp)) {
 }
 x<-data.frame(do.call("rbind",L))
 
-write.table(x,file="data.txt",quote=FALSE,row.names=FALSE)
-
-
+write.csv(x, file='data.csv', row.names=FALSE)
 
