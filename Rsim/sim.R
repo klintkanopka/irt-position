@@ -1,3 +1,5 @@
+##just a vanilla rasch model
+
 set.seed(1234120101)
 N<-1000
 n<-50
@@ -23,5 +25,5 @@ for (j in 1:ncol(resp)) {
 }
 x<-data.frame(do.call("rbind",L))
 
-write.csv(x, file='data.csv', row.names=FALSE)
+write.csv(x, file='data1.csv', row.names=FALSE)
 
