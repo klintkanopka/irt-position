@@ -31,7 +31,7 @@ Implemented arguments are as follows:
 - **--num_workers**: Number of parallel workers for data loader. Specifying more workers than your machine has cores may be sub-optimal. Defaults to 2
 - **--learning_rate_E**: Learning rate for E step. Defaults to 0.1
 - **--learning_rate_M**: Learning rate for M step. Defaults to 0.01
-- **--epsilon**: Epsilon used for convergence criterion. Note loss is currently implemented as total negative log likelihood, so scaling epsilon with data size is advised. Defaults to 0.01
+- **--epsilon**: Epsilon used for convergence criterion. Defaults to 0.01
 - **--verbose**: Prints additional fitting information and running loss within E and M steps. Defaults to `False`
 
 
@@ -53,7 +53,7 @@ Person-side parameters are:
 - `id`: Respondent identifier from original dataset
 - `sid`: Internal, 0-indexed, respondent key
 - `theta`: Estimated ability
-- `k`: Mixing location parameter. Specifies the item position where the mixture is half early, half late. Not constrained to be an integer
+- `k`: Mixing location parameter. Specifies the item position where the mixture is half early, half late. Note that 0 references the position of the first item answered, and 1 references the maximum item position in the data.
 - `c`: Mixing scale parameter. Controls the slope of the mixing curve. Larger values represent more abrupt transitions from early to late item response functions
 
 Item-side parameters are:
